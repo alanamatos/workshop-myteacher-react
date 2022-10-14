@@ -1,3 +1,4 @@
+import { userAgent } from "next/server";
 import { useEffect, useState } from "react";
 import { Professor } from "../../@types/professor";
 import { ApiService } from "../../services/ApiService";
@@ -7,6 +8,7 @@ export function useIndex() {
     const [nome, setNome] = useState('');
     const [email, setEmail] = useState('');
     const [professorSelecionado, setProfessorSelecionado] = useState<Professor | null>(null);
+    const [mensagem, setMensagem] = useState('');
 
         useEffect(() => {
             ApiService.get('/professores').then((resposta) => {
@@ -14,26 +16,35 @@ export function useIndex() {
             })
         }, []);
 
+        useEffect(() => {
+          limparFormulario()
+        }, [professorSelecionado])
+
         function marcarAula(){
           if (professorSelecionado !== null){
             if(validarDadosAula()){
-              ApiService.post('/professores/' + professorSelecionado.id +'/aulas', {
+              ApiService.post('/professores/' + professorSelecionado.id + '/aulas', {
                 nome, 
                 email
               }).then(() => {
                 setProfessorSelecionado(null);
-                  alert('Cadastrado com sucesso!');
-              }).catch((error) =>{
-                  alert(error.response?.data.message);
+                  setMensagem('Cadastrado com sucesso!');
+              }).catch((error) => {
+                setMensagem(error.response?.data.message);
               });
             } else {
-                alert('Preencha os dados corretamente');
+                setMensagem('Preencha os dados corretamente');
             }
           }
         }
 
         function validarDadosAula(){
           return nome.length > 0 && email.length > 0;
+        }
+
+        function limparFormulario() {
+          setNome ('');
+          setEmail ('');
         }
 
       return {
@@ -45,6 +56,8 @@ export function useIndex() {
         professorSelecionado,
         setProfessorSelecionado,
         marcarAula,
-        validarDadosAula
+        validarDadosAula,
+        mensagem,
+        setMensagem
       }
     }
